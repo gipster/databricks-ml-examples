@@ -23,7 +23,8 @@
 # COMMAND ----------
 
 # MAGIC %pip install -U torch==2.0.1
-# MAGIC %pip install accelerate==0.21.0 transformers[torch]==4.31.0
+# MAGIC # %pip install accelerate==0.21.0 transformers[torch]==4.31.0
+# MAGIC %pip install git+https://github.com/huggingface/transformers.git@main accelerate
 # MAGIC %pip install deepspeed==0.9.5 xformers
 # MAGIC dbutils.library.restartPython()
 
@@ -58,8 +59,8 @@ scripts/fine_tune_deepspeed.py \
 --final_model_output_path="/dbfs/llm" \
 --output_dir="/local_disk0/output" \
 --dataset="mosaicml/dolly_hhrlhf" \
---model="meta-llama/Llama-2-7b-hf" \
---tokenizer="meta-llama/Llama-2-7b-hf" \
+--model="codellama/CodeLlama-7b-Instruct-hf" \
+--tokenizer="codellama/CodeLlama-7b-Instruct-hf" \
 --deepspeed_config="../../config/a10_config.json" \
 --fp16=false \
 --bf16=true \

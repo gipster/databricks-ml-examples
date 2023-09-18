@@ -14,13 +14,6 @@
 
 # COMMAND ----------
 
-from huggingface_hub import notebook_login
-
-# Login to Huggingface to get access to the model
-notebook_login()
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Install required packages
 # MAGIC
@@ -30,7 +23,11 @@ notebook_login()
 
 # MAGIC %pip install git+https://github.com/huggingface/peft.git
 # MAGIC %pip install datasets==2.12.0 bitsandbytes==0.40.1 einops==0.6.1 trl==0.4.7
-# MAGIC %pip install torch==2.0.1 accelerate==0.21.0 transformers==4.31.0
+# MAGIC %pip install torch==2.0.1 accelerate==0.21.0 transformers==4.33.0.dev0
+
+# COMMAND ----------
+
+# MAGIC %pip install git+https://github.com/huggingface/transformers.git
 
 # COMMAND ----------
 
@@ -38,6 +35,22 @@ notebook_login()
 # MAGIC ## Dataset
 # MAGIC
 # MAGIC We will use the [databricks-dolly-15k ](https://huggingface.co/datasets/databricks/databricks-dolly-15k) dataset.
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
+from huggingface_hub import notebook_login
+
+# Login to Huggingface to get access to the model
+notebook_login()
+
+# COMMAND ----------
+
+import transformers
+transformers.__version__
 
 # COMMAND ----------
 
@@ -122,8 +135,9 @@ dataset["text"][0]
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, AutoTokenizer
 
-model = "meta-llama/Llama-2-7b-hf"
-revision = "351b2c357c69b4779bde72c0e7f7da639443d904"
+#model = "meta-llama/Llama-2-7b-hf"
+model = "codellama/CodeLlama-7b-Instruct-hf"
+#revision = "351b2c357c69b4779bde72c0e7f7da639443d904"
 
 tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
@@ -137,7 +151,7 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(
     model,
     quantization_config=bnb_config,
-    revision=revision,
+ #   revision=revision,
     trust_remote_code=True,
 )
 model.config.use_cache = False
@@ -262,7 +276,7 @@ trainer.train()
 
 # COMMAND ----------
 
-trainer.save_model("/local_disk0/llamav2-7b-lora-fine-tune")
+trainer.save_model("/local_disk0/codellamav2-7b-lora-fine-tune")
 
 # COMMAND ----------
 
@@ -274,7 +288,7 @@ trainer.save_model("/local_disk0/llamav2-7b-lora-fine-tune")
 import torch
 from peft import PeftModel, PeftConfig
 
-peft_model_id = "/local_disk0/llamav2-7b-lora-fine-tune"
+peft_model_id = "/local_disk0/codellamav2-7b-lora-fine-tune"
 config = PeftConfig.from_pretrained(peft_model_id)
 
 from huggingface_hub import snapshot_download
@@ -318,6 +332,10 @@ class LLAMAQLORA(mlflow.pyfunc.PythonModel):
     generated_text = self.tokenizer.decode(output_tokens[0], skip_special_tokens=True)
 
     return generated_text
+
+# COMMAND ----------
+
+mlflow.end_run()
 
 # COMMAND ----------
 
@@ -379,3 +397,7 @@ text_example=pd.DataFrame({
 
 # Predict on a Pandas DataFrame.
 loaded_model.predict(text_example)
+
+# COMMAND ----------
+
+
